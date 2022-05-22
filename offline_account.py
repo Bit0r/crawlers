@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import logging
 import re
+from hashlib import md5
 from pathlib import Path
 
 import httpx
@@ -13,7 +14,7 @@ from settings import headers
 env = rtoml.load(Path('env.toml'))['offline_account']
 base_url = env['base_url']
 username = env['username']
-passwd_hash = env['passwd_hash']
+password = env['password']
 
 headers['referer'] = base_url
 headers['x-requested-with'] = 'XMLHttpRequest'
@@ -48,7 +49,7 @@ def log_in(client: httpx.Client):
         r = client.post('user-login.htm',
                         data={
                             'email': username,
-                            'password': passwd_hash,
+                            'password': md5(password.encode()).hexdigest(),
                             'vcode': recognize_captcha(client),
                         }).json()
         logging.info(r)
