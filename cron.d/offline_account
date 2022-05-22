@@ -1,0 +1,2 @@
+#自动签到
+0 0 * * * bit0r cd ~/crawlers/ && ./offline_account.py
