@@ -23,7 +23,7 @@ prog = re.compile(r'\d{5}')
 ocr, ocr_old = DdddOcr(), DdddOcr(old=True)
 
 
-def delay():
+def delay(_):
     from random import randint
     from time import sleep
     logging.info('sleep...')
@@ -31,8 +31,7 @@ def delay():
 
 
 def recognize_captcha(client: httpx.Client):
-    while True:
-        delay()
+    for _ in range(5):
         r = client.get('vcode.htm')
         logging.info('识别验证码...')
         res = ocr.classification(r.content)
@@ -44,8 +43,7 @@ def recognize_captcha(client: httpx.Client):
 
 
 def log_in(client: httpx.Client):
-    while True:
-        delay()
+    for _ in range(4):
         r = client.post('user-login.htm',
                         data={
                             'email': username,
@@ -59,19 +57,22 @@ def log_in(client: httpx.Client):
 
 
 def check_in(client: httpx.Client):
-    delay()
     r = client.get('', headers=headers)
     parser = HTMLParser(r.content)
     url = parser.css_first(
         'button[data-modal-title="签到"]').attributes['data-modal-url']
     logging.info(url)
-    while True:
-        delay()
+    for _ in range(4):
         r = client.post(url, data={'vcode': recognize_captcha(client)}).json()
         logging.info(r)
-        if r['code'] in ('0', '-1'):
+        if r['code'] == '0' and '成功' in r['message']:
             logging.warning('签到成功！')
-            return
+            break
+        elif r['code'] == '-1' and '已经' in r['message']:
+            logging.warning('今日已签到！')
+            break
+    else:
+        logging.warning('签到失败！')
 
 
 if __name__ == '__main__':
@@ -79,6 +80,7 @@ if __name__ == '__main__':
                         level=logging.INFO)
     with httpx.Client(base_url=base_url,
                       headers=headers,
-                      follow_redirects=True) as client:
+                      follow_redirects=True,
+                      event_hooks={'request': [delay]}) as client:
         log_in(client)
         check_in(client)
