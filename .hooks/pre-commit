@@ -1,0 +1,4 @@
+#!/usr/bin/env fish
+
+yapf -irp ./ &&
+    isort --ac --gitignore ./
