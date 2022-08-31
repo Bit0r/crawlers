@@ -17,7 +17,7 @@ headers = {
 cookies = {'sid': xtu_covid_env.sid}
 
 # 保存成功或者失败的用户微信id
-success_users = ['NieWang']
+success_users = []
 failed_users = []
 
 
@@ -39,10 +39,13 @@ def check_in():
         failed_users.append(xtu_covid_env.wechat_id)
 
 
+# 发送企业微信通知
 def send_wechat():
     app = AppMsgSender(key_path="env.ini")
-    app.send_text('打卡成功！', touser=success_users)
-    app.send_text('打卡失败！', touser=failed_users)
+    if success_users:
+        app.send_text('打卡成功！', touser=success_users)
+    if failed_users:
+        app.send_text('打卡失败！', touser=failed_users)
 
 
 if __name__ == '__main__':
