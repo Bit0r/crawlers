@@ -43,7 +43,7 @@ def recognize_captcha(client: httpx.Client):
 
 
 def log_in(client: httpx.Client):
-    for _ in range(4):
+    for _ in range(6):
         r = client.post('user-login.htm',
                         data={
                             'email': username,
@@ -53,7 +53,10 @@ def log_in(client: httpx.Client):
         logging.info(r)
         if r['code'] == '0':
             logging.warning('登录成功！')
-            return
+            return True
+    else:
+        logging.warning('登陆失败')
+        return False
 
 
 def check_in(client: httpx.Client):
@@ -82,5 +85,5 @@ if __name__ == '__main__':
                       headers=headers,
                       follow_redirects=True,
                       event_hooks={'request': [delay]}) as client:
-        log_in(client)
-        check_in(client)
+        if log_in(client):
+            check_in(client)
