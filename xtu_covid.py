@@ -110,8 +110,13 @@ def check_in(body, wechat_id=None):
     if wechat_id is None:
         return
     if r.is_success:
-        logging.warning('打卡成功！')
-        success_users.append(wechat_id)
+        reply = r.json()
+        if reply['status'] == 0:
+            logging.warning('打卡成功！')
+            success_users.append(wechat_id)
+        else:
+            logging.error(f'{body["stId"]}-{body["stName"]}: {reply["msg"]}')
+            failed_users.append(wechat_id)
     else:
         logging.error(f'{r.status_code}: {r.text}')
         failed_users.append(wechat_id)
