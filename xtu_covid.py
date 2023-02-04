@@ -25,12 +25,12 @@ body_base = {
     "isWuhan": "N",
     "nowArea": "湖南省湘潭市雨湖区",
     "familyaddress": "羊牯塘湘潭大学",
-    "familyStatus": "0",
+    "familyStatus": "5",
     "diagnosisTreatment": "",
-    "nowStatus": "0",
-    "healthStatus": "3",
-    "isLevel": "N",
-    "isbackLive": "N",
+    "nowStatus": "5",
+    "healthStatus": None,
+    "isLevel": None,
+    "isbackLive": None,
     "trafficTool": "",
     "backTrafficTool": "",
     "levelDate": "",
@@ -46,7 +46,7 @@ body_base = {
     "timeToLeaveHuBei": "",
     "dateOfDisengagement": "",
     "otherSymptoms": "",
-    "nowStatusStartTime": "",
+    "nowStatusStartTime": "2023-01-01",
     "familyStatusStartTime": "",
     "feverStartTime": "",
     "coughStartTime": "",
@@ -58,12 +58,10 @@ body_base = {
     "runnyStartTime": "",
     "throatStartTime": "",
     "conjunctivaStartTime": "",
-    "isAppearDiagnosis": "N",
+    "isAppearDiagnosis": None,
     "isVaccinate": "1",
-    "vaccineType": "2",
-    "injectTimes": "3",
     "otherDesc": None,
-    "isContactWithDiagnosis": "N",
+    "isContactWithDiagnosis": None,
     "isInSchool": "",
 }
 
@@ -76,16 +74,14 @@ def get_body(base: dict, identity: dict):
     body = base.copy()
 
     # 设置用户个人信息
-    body['stId'] = identity['stId']
-    body['userId'] = identity['userId']
-    body['stName'] = identity['stName']
-    body['id'] = identity['id']
+    for key in ('stId', 'userId', 'stName', 'id', 'vaccineType',
+                'injectTimes'):
+        body[key] = str(identity[key])
 
     # 如果在家，则修改地址为家庭地址
     if identity['at_home']:
-        body['locationAddr'] = identity['homeLocation']
-        body['nowArea'] = identity['homeArea']
-        body['familyaddress'] = identity['homeAddress']
+        for key in ('homeLocation', 'homeArea', 'homeAddress'):
+            body[key] = identity[key]
 
     return body
 
