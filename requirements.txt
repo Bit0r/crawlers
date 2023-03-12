@@ -1,0 +1,6 @@
+ddddocr
+httpx[http2,brotli,socks]
+loguru
+playwright
+rtoml
+selectolax
