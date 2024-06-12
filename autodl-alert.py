@@ -35,12 +35,13 @@ class Autodl:
 
         self.request_body = settings.autodl_a40
 
-    def has_machine_idle(
+    def get_idle_machine(
         self,
         gpu_type_name="A40",
         data_disk_size="50GB",
         cuda_version="12.0",
         kernel_version="5.4",
+        gpus=1,
     ):
         if isinstance(gpu_type_name, str):
             gpu_type_name = [gpu_type_name]
@@ -70,12 +71,15 @@ class Autodl:
         for machine in r_json.data.list:
             gpu_idle_num = machine.gpu_idle_num
 
+            # 机器支持的最大数据盘扩容大小
             max_data_disk_expand_size = machine.max_data_disk_expand_size * ureg.byte
 
+            # 机器支持的最高 CUDA 版本
             highest_cuda_version = semver.VersionInfo.parse(
                 machine.highest_cuda_version, optional_minor_and_patch=True
             )
 
+            # 机器的 Linux Kernel 版本
             machine_kernel_version = semver.VersionInfo.parse(
                 machine.machine_base_info.kernel_version, optional_minor_and_patch=True
             )
@@ -84,25 +88,48 @@ class Autodl:
                 patch=0, prerelease=None, build=None
             )
 
+            # 机器支持的 GPU 一次性购买数量
+            gpu_order_num = machine.gpu_order_num
+
             if (
-                gpu_idle_num > 0
+                gpu_idle_num >= gpus
                 and max_data_disk_expand_size >= data_disk_size
                 and highest_cuda_version >= cuda_version
                 and machine_kernel_version >= kernel_version
+                and gpus % gpu_order_num == 0
             ):
-                return True
+                machine_info = {
+                    "machine_alias": machine.machine_alias,
+                    "gpu_idle_num": gpu_idle_num,
+                    "max_data_disk_expand_size": str(
+                        max_data_disk_expand_size.to("GB")
+                    ),
+                    "highest_cuda_version": str(highest_cuda_version),
+                    "machine_kernel_version": str(machine_kernel_version),
+                    "gpu_order_num": gpu_order_num,
+                }
+                return machine, Box(machine_info)
 
-        return False
+        return None
+
+    def has_machine_idle(self, **kwargs):
+        return bool(self.get_idle_machine(**kwargs))
 
     def watch_machine_idle(self, gpu_type_name="A40", data_disk_size="50GB", **kwargs):
         while True:
-            if self.has_machine_idle(gpu_type_name=gpu_type_name, **kwargs):
+            infos = self.get_idle_machine(gpu_type_name=gpu_type_name, **kwargs)
+            if infos:
                 notify = Notify()
                 notify.title = "AutoDL"
                 notify.message = f"""GPU: {gpu_type_name}
 硬盘: {data_disk_size}
 有空闲机器！"""
                 notify.send()
+
+                machine, machine_info = infos
+                machine.to_json("machine.json", indent="\t")
+                machine_info.to_json("machine_info.json", indent="\t")
+
                 break
 
             time.sleep(60)
@@ -116,7 +143,8 @@ if __name__ == "__main__":
     autodl = Autodl(env.list_path, env.auth_token, env.cookie)
     autodl.watch_machine_idle(
         gpu_type_name="A40",
-        data_disk_size="50GB",
+        data_disk_size="100GB",
         cuda_version="12.0",
         kernel_version="5.4",
+        gpus=2,
     )
