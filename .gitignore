@@ -4,6 +4,7 @@ __pycache__/
 *.txt
 *.ipynb
 *.db
+*.dump
 *~.*
 
 !requirements.txt

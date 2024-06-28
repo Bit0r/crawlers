@@ -1,3 +1,9 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 headers = {
     "accept": "application/json,application/xml;q=0.9,text/html;q=0.8,*/*;q=0.1",
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.26/8mqLqMuL-37",  # noqa
@@ -26,3 +32,6 @@ autodl_a40 = {
     "default_order": True,
     "region_sign_list": ["neimeng-A", "neimeng-C", "neimeng-D"],
 }
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
